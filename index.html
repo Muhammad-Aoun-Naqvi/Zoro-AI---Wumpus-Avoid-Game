@@ -1,0 +1,539 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .zoro-root {
+    background: #0a0a12;
+    min-height: 600px;
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+    position: relative;
+    border-radius: 12px;
+    color: #c0c8d8;
+  }
+
+  .scanlines {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,180,0.015) 2px, rgba(0,255,180,0.015) 4px);
+    pointer-events: none; z-index: 0;
+  }
+
+  .grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,160,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,160,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .content { position: relative; z-index: 2; padding: 2rem 2rem 1.5rem; }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 1.5rem; }
+
+  .agent-badge {
+    display: inline-block;
+    background: rgba(0,255,160,0.08);
+    border: 1px solid rgba(0,255,160,0.3);
+    color: #00ffa0;
+    font-size: 11px;
+    letter-spacing: 3px;
+    padding: 4px 14px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+    animation: badge-pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes badge-pulse {
+    0%, 100% { opacity: 0.7; box-shadow: 0 0 6px rgba(0,255,160,0.2); }
+    50% { opacity: 1; box-shadow: 0 0 16px rgba(0,255,160,0.5); }
+  }
+
+  .main-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: #e0eaff;
+    text-shadow: 0 0 30px rgba(100,160,255,0.4);
+    animation: title-flicker 6s ease-in-out infinite;
+  }
+
+  @keyframes title-flicker {
+    0%, 90%, 100% { opacity: 1; }
+    92% { opacity: 0.85; }
+    94% { opacity: 1; }
+    96% { opacity: 0.9; }
+  }
+
+  .title-accent {
+    color: #00ffa0;
+    text-shadow: 0 0 20px rgba(0,255,160,0.6);
+  }
+
+  .subtitle {
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: #5a7090;
+    margin-top: 6px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 0.5px solid rgba(0,255,160,0.15);
+    border-top: 1.5px solid rgba(0,255,160,0.4);
+    border-radius: 4px;
+    padding: 12px 14px;
+    transition: all 0.3s ease;
+    cursor: default;
+  }
+  .stat-card:hover {
+    background: rgba(0,255,160,0.05);
+    border-color: rgba(0,255,160,0.4);
+    transform: translateY(-2px);
+  }
+  .stat-label { font-size: 10px; letter-spacing: 2px; color: #445566; margin-bottom: 4px; }
+  .stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #00ffa0;
+  }
+  .stat-unit { font-size: 10px; color: #445566; margin-left: 4px; }
+
+  /* Grid section */
+  .section-label {
+    font-size: 10px; letter-spacing: 3px; color: #445566;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 0.5px; background: rgba(0,255,160,0.12);
+  }
+
+  .agent-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 1.5rem;
+  }
+
+  .grid-cell {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-family: 'Orbitron', sans-serif;
+    cursor: pointer;
+    border: 0.5px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03);
+    color: #445566;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+  .grid-cell::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at center, rgba(0,255,160,0.15), transparent 70%);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .grid-cell:hover::before { opacity: 1; }
+  .grid-cell:hover {
+    border-color: rgba(0,255,160,0.35);
+    color: #00ffa0;
+    transform: scale(1.04);
+  }
+  .grid-cell.visited {
+    background: rgba(0,255,160,0.1);
+    border-color: rgba(0,255,160,0.4);
+    color: #00ffa0;
+    animation: cell-activate 0.4s ease;
+  }
+  .grid-cell.start {
+    background: rgba(100,160,255,0.12);
+    border-color: rgba(100,160,255,0.5);
+    color: #6499ff;
+  }
+  .grid-cell.hazard {
+    background: rgba(255,80,80,0.12);
+    border-color: rgba(255,80,80,0.4);
+    color: #ff5050;
+    animation: hazard-flash 0.6s ease;
+  }
+  @keyframes cell-activate {
+    0% { transform: scale(0.9); opacity: 0.5; }
+    60% { transform: scale(1.06); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes hazard-flash {
+    0%, 100% { background: rgba(255,80,80,0.12); }
+    50% { background: rgba(255,80,80,0.3); }
+  }
+
+  /* Log panel */
+  .log-panel {
+    background: rgba(0,0,0,0.4);
+    border: 0.5px solid rgba(0,255,160,0.1);
+    border-radius: 4px;
+    padding: 12px;
+    height: 90px;
+    overflow-y: auto;
+    font-size: 11px;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+  }
+  .log-panel::-webkit-scrollbar { width: 3px; }
+  .log-panel::-webkit-scrollbar-thumb { background: rgba(0,255,160,0.2); }
+  .log-entry { animation: log-in 0.3s ease; }
+  @keyframes log-in {
+    from { opacity: 0; transform: translateX(-6px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .log-ts { color: #334455; }
+  .log-ok { color: #00ffa0; }
+  .log-warn { color: #ffa040; }
+  .log-info { color: #6499ff; }
+
+  /* Controls */
+  .controls-row {
+    display: flex; gap: 10px; align-items: center;
+  }
+  .zoro-btn {
+    background: transparent;
+    border: 0.5px solid rgba(0,255,160,0.3);
+    color: #00ffa0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 8px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .zoro-btn:hover {
+    background: rgba(0,255,160,0.1);
+    border-color: rgba(0,255,160,0.6);
+    box-shadow: 0 0 12px rgba(0,255,160,0.2);
+    transform: translateY(-1px);
+  }
+  .zoro-btn:active { transform: scale(0.97); }
+
+  .percept-display {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border: 0.5px solid rgba(255,255,255,0.06);
+    border-radius: 2px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #445566;
+    letter-spacing: 1px;
+  }
+  .percept-display span { color: #6499ff; }
+
+  /* Robot face accent */
+  .robot-face {
+    width: 48px; height: 48px;
+    margin: 0 auto 10px;
+    position: relative;
+  }
+  .robot-eye {
+    width: 10px; height: 10px;
+    background: #00ffa0;
+    border-radius: 2px;
+    display: inline-block;
+    margin: 0 4px;
+    animation: blink 4s ease-in-out infinite;
+  }
+  .robot-eye.right { animation-delay: 0.15s; }
+  @keyframes blink {
+    0%, 90%, 100% { transform: scaleY(1); }
+    95% { transform: scaleY(0.1); }
+  }
+  .robot-mouth {
+    width: 28px; height: 3px;
+    background: rgba(0,255,160,0.4);
+    border-radius: 2px;
+    margin: 6px auto 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .robot-mouth::after {
+    content: '';
+    position: absolute;
+    left: -100%;
+    width: 100%; height: 100%;
+    background: #00ffa0;
+    animation: speak 1.8s linear infinite;
+  }
+  @keyframes speak {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  /* Animated ring behind title */
+  .ring-wrap { position: relative; margin-bottom: 0.5rem; }
+  .spinning-ring {
+    position: absolute;
+    width: 220px; height: 220px;
+    border: 0.5px solid rgba(0,255,160,0.1);
+    border-top-color: rgba(0,255,160,0.4);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation: spin 8s linear infinite;
+    pointer-events: none;
+  }
+  .spinning-ring.r2 {
+    width: 260px; height: 260px;
+    border-color: rgba(100,160,255,0.06);
+    border-right-color: rgba(100,160,255,0.25);
+    animation-duration: 12s;
+    animation-direction: reverse;
+  }
+  @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  /* Corner decorations */
+  .corner { position: absolute; width: 20px; height: 20px; }
+  .corner.tl { top: 10px; left: 10px; border-top: 1.5px solid #00ffa0; border-left: 1.5px solid #00ffa0; }
+  .corner.tr { top: 10px; right: 10px; border-top: 1.5px solid #00ffa0; border-right: 1.5px solid #00ffa0; }
+  .corner.bl { bottom: 10px; left: 10px; border-bottom: 1.5px solid #00ffa0; border-left: 1.5px solid #00ffa0; }
+  .corner.br { bottom: 10px; right: 10px; border-bottom: 1.5px solid #00ffa0; border-right: 1.5px solid #00ffa0; }
+</style>
+
+<h2 class="sr-only">Zoro AI Agent — robotic knowledge-based pathfinding interface</h2>
+
+<div class="zoro-root">
+  <div class="scanlines"></div>
+  <div class="grid-bg"></div>
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="content">
+    <div class="header">
+      <div class="ring-wrap">
+        <div class="spinning-ring"></div>
+        <div class="spinning-ring r2"></div>
+        <div class="robot-face">
+          <div style="display:flex;align-items:center;justify-content:center;padding-top:10px;">
+            <div class="robot-eye"></div>
+            <div class="robot-eye right"></div>
+          </div>
+          <div class="robot-mouth"></div>
+        </div>
+      </div>
+      <div class="agent-badge">UNIT ONLINE</div>
+      <div class="main-title"><span class="title-accent">ZORO</span> AI</div>
+      <div class="subtitle">KNOWLEDGE-BASED PATHFINDING AGENT</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">INFERENCE</div>
+        <div class="stat-value" id="s-steps">0<span class="stat-unit">OPS</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">SAFE CELLS</div>
+        <div class="stat-value" id="s-safe">0<span class="stat-unit">PTS</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">STATUS</div>
+        <div class="stat-value" id="s-status" style="font-size:0.85rem;letter-spacing:2px;">READY</div>
+      </div>
+    </div>
+
+    <div class="section-label">ENVIRONMENT GRID — 4x4</div>
+    <div class="agent-grid" id="agent-grid"></div>
+
+    <div class="section-label">SYSTEM LOG</div>
+    <div class="log-panel" id="log-panel"></div>
+
+    <div class="controls-row">
+      <button class="zoro-btn" onclick="resetAgent()">REINIT</button>
+      <button class="zoro-btn" onclick="autoRun()">AUTO-RUN</button>
+      <div class="percept-display">PERCEPTS: <span id="percepts-display">NONE</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ROWS = 4, COLS = 4;
+let visited = new Set();
+let safeCells = new Set();
+let hazards = new Set();
+let inferenceSteps = 0;
+let agentPos = null;
+let autoRunning = false;
+
+function ts() {
+  const n = new Date();
+  return `[${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}]`;
+}
+
+function log(msg, type='ok') {
+  const panel = document.getElementById('log-panel');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-ts">${ts()}</span> <span class="log-${type}">${msg}</span>`;
+  panel.appendChild(entry);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function buildGrid() {
+  const grid = document.getElementById('agent-grid');
+  grid.innerHTML = '';
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell';
+      cell.id = `cell-${r}-${c}`;
+      cell.textContent = `${r},${c}`;
+      cell.onclick = () => moveAgent(r, c);
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function placeHazards() {
+  hazards.clear();
+  const candidates = [];
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (!(r === 0 && c === 0)) candidates.push(`${r},${c}`);
+  for (let i = 0; i < 3; i++) {
+    const idx = Math.floor(Math.random() * candidates.length);
+    hazards.add(candidates.splice(idx, 1)[0]);
+  }
+}
+
+function updateStats() {
+  document.getElementById('s-steps').innerHTML = `${inferenceSteps}<span class="stat-unit">OPS</span>`;
+  document.getElementById('s-safe').innerHTML = `${safeCells.size}<span class="stat-unit">PTS</span>`;
+}
+
+function getCellEl(r, c) {
+  return document.getElementById(`cell-${r}-${c}`);
+}
+
+function computeSafe(r, c) {
+  const neighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+  neighbors.forEach(([nr, nc]) => {
+    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+      const key = `${nr},${nc}`;
+      if (!hazards.has(key) && !safeCells.has(key) && !visited.has(key)) {
+        safeCells.add(key);
+        const el = getCellEl(nr, nc);
+        if (el && !el.classList.contains('visited')) el.classList.add('visited');
+      }
+    }
+  });
+}
+
+function getPercepts(r, c) {
+  const percepts = [];
+  const neighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+  let nearHazard = false;
+  neighbors.forEach(([nr,nc]) => {
+    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+      if (hazards.has(`${nr},${nc}`)) nearHazard = true;
+    }
+  });
+  if (nearHazard) percepts.push('STENCH');
+  if (r === ROWS - 1 && c === COLS - 1) percepts.push('GOAL');
+  return percepts;
+}
+
+function moveAgent(r, c) {
+  const key = `${r},${c}`;
+  if (agentPos) {
+    const [pr, pc] = agentPos;
+    const prevEl = getCellEl(pr, pc);
+    if (prevEl) {
+      prevEl.classList.remove('start');
+      prevEl.classList.add('visited');
+      prevEl.textContent = `${pr},${pc}`;
+    }
+  }
+
+  inferenceSteps += Math.floor(Math.random() * 3) + 1;
+
+  if (hazards.has(key)) {
+    const el = getCellEl(r, c);
+    el.classList.add('hazard');
+    el.textContent = '!';
+    log(`HAZARD at (${r},${c}) — agent terminated`, 'warn');
+    document.getElementById('s-status').textContent = 'DEAD';
+    document.getElementById('percepts-display').textContent = 'TERMINATED';
+    updateStats();
+    autoRunning = false;
+    return;
+  }
+
+  agentPos = [r, c];
+  visited.add(key);
+  const el = getCellEl(r, c);
+  el.className = 'grid-cell start';
+  el.textContent = 'AGT';
+
+  computeSafe(r, c);
+  const percepts = getPercepts(r, c);
+  updateStats();
+
+  document.getElementById('percepts-display').textContent = percepts.length ? percepts.join(' + ') : 'NONE';
+  document.getElementById('s-status').innerHTML = percepts.includes('GOAL') ? '<span style="color:#00ffa0">GOAL</span>' : 'ACTIVE';
+
+  log(`Moved to (${r},${c}) — percepts: ${percepts.length ? percepts.join(', ') : 'none'}`, percepts.includes('STENCH') ? 'warn' : 'info');
+
+  if (percepts.includes('GOAL')) {
+    log('GOAL reached — mission complete', 'ok');
+    autoRunning = false;
+  }
+}
+
+function resetAgent() {
+  visited.clear(); safeCells.clear(); hazards.clear();
+  inferenceSteps = 0; agentPos = null; autoRunning = false;
+  document.getElementById('percepts-display').textContent = 'NONE';
+  document.getElementById('s-status').textContent = 'READY';
+  updateStats();
+  buildGrid();
+  placeHazards();
+  log('System reinitialised — new environment loaded', 'ok');
+  setTimeout(() => moveAgent(0, 0), 300);
+}
+
+function autoRun() {
+  if (autoRunning) { autoRunning = false; return; }
+  autoRunning = true;
+  log('Auto-run engaged — navigating safe cells...', 'info');
+  function step() {
+    if (!autoRunning || !agentPos) return;
+    const safe = [...safeCells].filter(k => !visited.has(k));
+    if (!safe.length) { autoRunning = false; log('No safe frontier — halted', 'warn'); return; }
+    const [nr, nc] = safe[Math.floor(Math.random() * safe.length)].split(',').map(Number);
+    moveAgent(nr, nc);
+    if (autoRunning) setTimeout(step, 900);
+  }
+  setTimeout(step, 900);
+}
+
+buildGrid();
+placeHazards();
+log('Zoro AI Agent v2.4 — system online', 'ok');
+log('Environment generated: 4x4 grid with 3 hazards', 'info');
+setTimeout(() => moveAgent(0, 0), 400);
+</script>
